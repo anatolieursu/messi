@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messier Trainer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0b0d12;
+      color: #eef2ff;
+    }
+
+    .app {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .subtitle {
+      color: #a7b0c3;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: #121722;
+      border: 1px solid #232b3b;
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-width: 110px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #92a0ba;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .card {
+      background: #11151f;
+      border: 1px solid #20273a;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid #20273a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .small-note {
+      color: #9aa6bf;
+      font-size: 13px;
+    }
+
+    .image-wrap {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #090b10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #20273a;
+      position: relative;
+    }
+
+    .image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #05070b;
+    }
+
+    .image-placeholder {
+      color: #8d98ae;
+      font-size: 16px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .content {
+      padding: 18px;
+    }
+
+    .prompt {
+      font-size: 16px;
+      margin-bottom: 14px;
+      color: #e8edff;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: #9aa6bf;
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      background: #0d121b;
+      color: #eef2ff;
+      border: 1px solid #283148;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: #4b74ff;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #4b74ff;
+      color: white;
+    }
+
+    .secondary {
+      background: #1a2232;
+      color: #e8edff;
+      border: 1px solid #2a3550;
+    }
+
+    .danger {
+      background: #2b1720;
+      color: #ffd9e3;
+      border: 1px solid #523042;
+    }
+
+    .result {
+      min-height: 72px;
+      border: 1px solid #252e43;
+      background: #0e131d;
+      border-radius: 12px;
+      padding: 14px;
+      line-height: 1.5;
+    }
+
+    .result.good {
+      border-color: #1d5f41;
+      background: #0c1a14;
+    }
+
+    .result.bad {
+      border-color: #6b2d3b;
+      background: #1b1014;
+    }
+
+    .result-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 6px 12px;
+      align-items: start;
+    }
+
+    .answer-label {
+      color: #9aa6bf;
+      font-weight: 700;
+    }
+
+    .answer-value {
+      color: #e8edff;
+    }
+
+    .sky-map-section { grid-column: 1 / -1; margin-top: 12px; }
+    .sky-map-title { font-weight: 700; margin-bottom: 8px; }
+    .sky-map { width: 100%; height: 390px; border: 1px solid #283148; border-radius: 10px; overflow: hidden; background: #05070b; }
+    .sky-map img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sky-map svg { width: 100%; height: 100%; display: block; }
+    .sky-map-note { color: #99a5be; font-size: 12px; margin-top: 7px; }
+
+    .muted {
+      color: #99a5be;
+      font-size: 14px;
+    }
+
+    .footer {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: #8996b0;
+      font-size: 13px;
+    }
+
+    .source-link {
+      color: #9cb6ff;
+      text-decoration: none;
+    }
+
+    .nav-link { display: inline-block; margin-top: 10px; color: #eef2ff; background: #1a2232; border: 1px solid #2a3550; border-radius: 9px; padding: 8px 12px; text-decoration: none; font-size: 14px; font-weight: 700; }
+
+    .panel {
+      margin-top: 16px;
+      background: #11151f;
+      border: 1px solid #20273a;
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    .panel h3 {
+      margin: 0 0 12px 0;
+      font-size: 18px;
+    }
+
+    .category-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .category-tools select, .category-tools input { background: #0d121b; color: #eef2ff; border: 1px solid #283148; padding: 9px 11px; border-radius: 8px; font-size: 14px; }
+    .category-editor-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .category-editor-header h3 { margin: 0; }
+    .object-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-bottom: 14px; }
+    .object-option { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid #252e43; border-radius: 9px; background: #0e131d; color: #c7d0e5; cursor: pointer; font-size: 13px; }
+    .object-option:has(input:checked) { border-color: #4b74ff; background: #141d35; color: #eef2ff; }
+    .object-option input { accent-color: #4b74ff; }
+
+    .catalogue-list {
+      color: #b8c2d8;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat {
+        min-width: 90px;
+      }
+
+      .title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div>
+        <div class="title">Messier Trainer</div>
+        <div class="subtitle">Identify the object by image, Messier number, and type</div>
+        <a class="nav-link" href="stats.html">View statistics</a>
+        <a class="nav-link" href="flashcards.html">Study flashcards</a>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Progress</div>
+          <div class="stat-value" id="progressStat">0 / 0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Score</div>
+          <div class="stat-value" id="scoreStat">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value" id="streakStat">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Mistakes</div>
+          <div class="stat-value" id="mistakeStat">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 id="questionTitle">Loading...</h2>
+        <div class="small-note" id="modeLabel">Mode: All objects</div>
+      </div>
+
+      <div class="image-wrap" id="imageWrap">
+        <div class="image-placeholder">Loading image...</div>
+      </div>
+
+      <div class="content">
+        <div class="prompt">
+          Write the Messier number and choose the object type.
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="messierInput">Messier number</label>
+            <input id="messierInput" type="text" placeholder="Example: 31 or M31" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="typeInput">Object type</label>
+            <select id="typeInput">
+              <option value="">Choose type</option>
+              <option value="Galaxy">Galaxy</option>
+              <option value="Open cluster">Open cluster</option>
+              <option value="Globular cluster">Globular cluster</option>
+              <option value="Nebula">Nebula</option>
+              <option value="Other / Double star">Other / Double star</option>
+              <option value="Other / Star cloud / Asterism">Other / Star cloud / Asterism</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" id="checkBtn">Check answer</button>
+          <button class="secondary" id="nextBtn">Next</button>
+          <button class="secondary" id="showBtn">Show answer</button>
+          <button class="danger" id="restartBtn">Restart all</button>
+          <button class="secondary" id="mistakesBtn">Replay mistakes</button>
+        </div>
+
+        <div class="result" id="resultBox">
+          <div class="muted">Answer the question, then press “Check answer”.</div>
+        </div>
+
+        <div class="footer">
+          <div id="objectCountLabel"></div>
+          <div>
+            Image and text from Wikipedia
+            <a class="source-link" id="wikiLink" href="#" target="_blank" rel="noopener noreferrer">Open source page</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="category-editor-header">
+        <div>
+          <h3>Included objects</h3>
+          <div class="category-tools">
+            <label for="categorySelect" class="small-note">Messier category:</label>
+            <select id="categorySelect"></select>
+            <input id="newCategoryInput" placeholder="Category name" />
+            <button class="primary" id="addCategoryBtn">Add category of Messier objects</button>
+          </div>
+          <div class="small-note" id="categoryHelp" style="margin-top:10px"></div>
+        </div>
+        <div class="buttons" style="margin:0">
+          <button class="secondary" id="selectAllBtn">Select all</button>
+          <button class="secondary" id="clearAllBtn">Clear all</button>
+          <button class="danger hidden" id="deleteCategoryBtn">Delete category</button>
+        </div>
+      </div>
+      <div class="object-picker" id="objectPicker"></div>
+      <div class="catalogue-list" id="catalogueList"></div>
+    </div>
+  </div>
+
+  <script src="user-profile.js"></script>
+  <script src="sky-data.js"></script>
+  <script src="sky-map.js"></script>
+
+  <script>
+    const CURRENT_USERNAME = MessierUser.getCurrent();
+    MessierUser.mount(CURRENT_USERNAME);
+    const objectTypeGroups = {
+      "Nebula": [1, 8, 16, 17, 20, 27, 42, 43, 57, 76, 78, 97],
+      "Open cluster": [6, 7, 11, 18, 21, 23, 25, 26, 29, 34, 35, 36, 37, 38, 39, 41, 44, 45, 46, 47, 48, 50, 52, 67, 93, 103],
+      "Globular cluster": [2, 3, 4, 5, 9, 10, 12, 13, 14, 15, 19, 22, 28, 30, 53, 54, 55, 56, 62, 68, 69, 70, 71, 72, 75, 79, 80, 92, 107],
+      "Other / Double star": [40],
+      "Other / Star cloud / Asterism": [24, 73]
+    };
+
+    const typeByMessier = new Map();
+    Object.entries(objectTypeGroups).forEach(([type, numbers]) => {
+      numbers.forEach(number => typeByMessier.set(number, type));
+    });
+
+    // Every number not listed above is a galaxy.
+    const baseObjects = Array.from({ length: 110 }, (_, index) => {
+      const messier = index + 1;
+      return {
+        messier,
+        page: `Messier ${messier}`,
+        type: typeByMessier.get(messier) || "Galaxy"
+      };
+    });
+
+    const imageCache = new Map();
+    const localCatalog = fetch("data/messier.json").then(response => {
+      if (!response.ok) throw new Error("Local Messier catalog unavailable");
+      return response.json();
+    }).catch(() => ({}));
+    const resultBox = document.getElementById("resultBox");
+    const questionTitle = document.getElementById("questionTitle");
+    const modeLabel = document.getElementById("modeLabel");
+    const imageWrap = document.getElementById("imageWrap");
+    const messierInput = document.getElementById("messierInput");
+    const typeInput = document.getElementById("typeInput");
+    const progressStat = document.getElementById("progressStat");
+    const scoreStat = document.getElementById("scoreStat");
+    const streakStat = document.getElementById("streakStat");
+    const mistakeStat = document.getElementById("mistakeStat");
+    const objectCountLabel = document.getElementById("objectCountLabel");
+    const wikiLink = document.getElementById("wikiLink");
+    const catalogueList = document.getElementById("catalogueList");
+
+    const DEFAULT_CATEGORY_NAMES = ["Anatolie", "ALL"];
+    const CATEGORY_STORAGE_KEY = MessierUser.storageKey("messier-trainer-categories-v1", CURRENT_USERNAME);
+    const allMessierNumbers = baseObjects.map(obj => obj.messier);
+    const anatolieDefaultNumbers = [1, 3, 13, 15, 29, 31, 32, 33, 34, 36, 37, 38, 39, 40, 45, 51, 52, 53, 56, 57, 63, 64, 74, 76, 81, 82, 85, 88, 91, 92, 94, 97, 98, 99, 100, 101, 102, 103, 106, 108, 109, 110];
+
+    function loadCategories() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CATEGORY_STORAGE_KEY));
+        if (saved && typeof saved === "object") {
+          // Migrate the earlier defaults while keeping categories made by the user.
+          delete saved.Ioana;
+          delete saved.all;
+          delete saved.anatol;
+          return {
+            Anatolie: Array.isArray(saved.Anatolie) ? saved.Anatolie : [...anatolieDefaultNumbers],
+            ALL: [...allMessierNumbers],
+            ...Object.fromEntries(Object.entries(saved).filter(([name]) => !DEFAULT_CATEGORY_NAMES.includes(name)))
+          };
+        }
+      } catch (error) {}
+      return { Anatolie: [...anatolieDefaultNumbers], ALL: [...allMessierNumbers] };
+    }
+
+    let categories = loadCategories();
+    let selectedCategory = "Anatolie";
+    const categorySelect = document.getElementById("categorySelect");
+    const newCategoryInput = document.getElementById("newCategoryInput");
+    const addCategoryBtn = document.getElementById("addCategoryBtn");
+    const objectPicker = document.getElementById("objectPicker");
+    const categoryHelp = document.getElementById("categoryHelp");
+    const deleteCategoryBtn = document.getElementById("deleteCategoryBtn");
+
+    function saveCategories() {
+      localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(categories));
+    }
+
+    function renderCategorySelect() {
+      categorySelect.innerHTML = Object.keys(categories)
+        .map(name => `<option value="${name}">${name} (${categories[name].length})</option>`)
+        .join("");
+      categorySelect.value = selectedCategory;
+    }
+
+    function renderObjectPicker() {
+      const included = new Set(categories[selectedCategory] || []);
+      const isAll = selectedCategory === "ALL";
+      categoryHelp.textContent = isAll
+        ? `“ALL” always contains all ${allMessierNumbers.length} Messier objects.`
+        : `Editing “${selectedCategory}” — ${included.size} selected objects`;
+      deleteCategoryBtn.classList.toggle("hidden", DEFAULT_CATEGORY_NAMES.includes(selectedCategory));
+      document.getElementById("selectAllBtn").classList.toggle("hidden", isAll);
+      document.getElementById("clearAllBtn").classList.toggle("hidden", isAll);
+      objectPicker.innerHTML = [...baseObjects].sort((a, b) => a.messier - b.messier).map(obj => `
+        <label class="object-option">
+          <input type="checkbox" value="${obj.messier}" ${included.has(obj.messier) ? "checked" : ""} ${isAll ? "disabled" : ""}>
+          <span><strong>M${obj.messier}</strong> — ${obj.type}</span>
+        </label>`).join("");
+    }
+
+    addCategoryBtn.addEventListener('click', () => {
+      const v = (newCategoryInput.value || '').trim();
+      if (!v) return;
+      const existing = Object.keys(categories).find(name => name.toLowerCase() === v.toLowerCase());
+      if (!existing) categories[v] = [];
+      flushTrainingTime();
+      selectedCategory = existing || v;
+      newCategoryInput.value = '';
+      saveCategories();
+      renderCategorySelect();
+      renderObjectPicker();
+      buildCatalogueList();
+      startSession('all');
+    });
+
+    newCategoryInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") addCategoryBtn.click();
+    });
+
+    categorySelect.addEventListener('change', () => {
+      flushTrainingTime();
+      selectedCategory = categorySelect.value;
+      renderObjectPicker();
+      buildCatalogueList();
+      startSession('all');
+    });
+
+    objectPicker.addEventListener("change", event => {
+      if (!event.target.matches('input[type="checkbox"]')) return;
+      if (selectedCategory === "ALL") return;
+      categories[selectedCategory] = [...objectPicker.querySelectorAll('input:checked')].map(input => Number(input.value));
+      saveCategories();
+      renderCategorySelect();
+      renderObjectPicker();
+      buildCatalogueList();
+      startSession("all");
+    });
+
+    document.getElementById("selectAllBtn").addEventListener("click", () => {
+      categories[selectedCategory] = [...allMessierNumbers];
+      saveCategories(); renderCategorySelect(); renderObjectPicker(); buildCatalogueList(); startSession("all");
+    });
+
+    document.getElementById("clearAllBtn").addEventListener("click", () => {
+      categories[selectedCategory] = [];
+      saveCategories(); renderCategorySelect(); renderObjectPicker(); buildCatalogueList(); startSession("all");
+    });
+
+    deleteCategoryBtn.addEventListener("click", () => {
+      if (DEFAULT_CATEGORY_NAMES.includes(selectedCategory)) return;
+      delete categories[selectedCategory];
+      flushTrainingTime();
+      selectedCategory = "Anatolie";
+      saveCategories(); renderCategorySelect(); renderObjectPicker(); buildCatalogueList(); startSession("all");
+    });
+
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let streak = 0;
+    let mistakes = new Set();
+    let mode = "all";
+    let currentAnswered = false;
+    const STATS_STORAGE_KEY = MessierUser.storageKey("messier-trainer-statistics-v1", CURRENT_USERNAME);
+    let trainingTimerStartedAt = document.visibilityState === "visible" ? Date.now() : null;
+
+    function flushTrainingTime() {
+      if (trainingTimerStartedAt === null) return;
+      const now = Date.now();
+      const elapsedSeconds = Math.max(0, (now - trainingTimerStartedAt) / 1000);
+      trainingTimerStartedAt = now;
+      if (elapsedSeconds < 0.1) return;
+
+      let stats;
+      try { stats = JSON.parse(localStorage.getItem(STATS_STORAGE_KEY)) || {}; } catch (error) { stats = {}; }
+      stats.trainingSeconds = (stats.trainingSeconds || 0) + elapsedSeconds;
+      stats.categoryTrainingSeconds = stats.categoryTrainingSeconds || {};
+      stats.categoryTrainingSeconds[selectedCategory] = (stats.categoryTrainingSeconds[selectedCategory] || 0) + elapsedSeconds;
+      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
+    }
+
+    setInterval(flushTrainingTime, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        flushTrainingTime();
+        trainingTimerStartedAt = null;
+      } else {
+        trainingTimerStartedAt = Date.now();
+      }
+    });
+    window.addEventListener("pagehide", () => {
+      flushTrainingTime();
+    });
+
+    function recordAnswer(object, outcome) {
+      let stats;
+      try { stats = JSON.parse(localStorage.getItem(STATS_STORAGE_KEY)) || {}; } catch (error) { stats = {}; }
+      stats.total = stats.total || { answered: 0, correct: 0, incorrect: 0, revealed: 0 };
+      stats.categories = stats.categories || {};
+      stats.objects = stats.objects || {};
+      const categoryStats = stats.categories[selectedCategory] || { answered: 0, correct: 0, incorrect: 0, revealed: 0 };
+      const objectStats = stats.objects[object.messier] || { answered: 0, correct: 0, incorrect: 0, revealed: 0 };
+
+      [stats.total, categoryStats, objectStats].forEach(bucket => {
+        bucket.answered += 1;
+        bucket[outcome] += 1;
+      });
+      stats.categories[selectedCategory] = categoryStats;
+      stats.objects[object.messier] = objectStats;
+      stats.lastActivity = new Date().toISOString();
+      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function normalizeMessier(value) {
+      const match = String(value).toUpperCase().replace(/\s+/g, "").match(/M?(\d{1,3})/);
+      return match ? Number(match[1]) : null;
+    }
+
+    function shortText(text) {
+      if (!text) return "No short description available.";
+      if (text.length <= 320) return text;
+      return text.slice(0, 317) + "...";
+    }
+
+    async function fetchWikipediaData(pageTitle) {
+      if (imageCache.has(pageTitle)) return imageCache.get(pageTitle);
+
+      const numberMatch = pageTitle.match(/Messier\s+(\d+)/i);
+      const local = numberMatch ? (await localCatalog)[Number(numberMatch[1])] : null;
+      if (local?.image) {
+        const result = {
+          title: local.title || pageTitle,
+          image: local.image,
+          extract: local.extract || "",
+          url: local.url || `https://en.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, "_"))}`
+        };
+        imageCache.set(pageTitle, result);
+        return result;
+      }
+
+      // Try Wikimedia REST summary endpoint first (better thumbnail/original image info)
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
+      try {
+        const resp = await fetch(summaryUrl);
+        const data = await resp.json();
+        // Use a balanced 900px preview for faster loading.
+        const thumbnail = data.thumbnail && data.thumbnail.source;
+        const imageUrl = thumbnail
+          ? thumbnail.replace(/\/\d+px-/, "/900px-")
+          : (data.originalimage && data.originalimage.source) || "";
+        const result = {
+          title: data.title || pageTitle,
+          image: imageUrl,
+          extract: data.extract || "",
+          url: (data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page) || `https://en.wikipedia.org/wiki/${encodeURIComponent((data.title || pageTitle).replace(/ /g, "_"))}`
+        };
+        imageCache.set(pageTitle, result);
+        return result;
+      } catch (e) {
+        // Fallback to legacy API if REST fails
+        const url = `https://en.wikipedia.org/w/api.php?action=query&origin=*&format=json&prop=pageimages|extracts&exintro=1&explaintext=1&pithumbsize=900&titles=${encodeURIComponent(pageTitle)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const page = Object.values(data.query.pages)[0] || {};
+        const result = {
+          title: page.title || pageTitle,
+          image: page.thumbnail ? page.thumbnail.source : "",
+          extract: page.extract || "",
+          url: `https://en.wikipedia.org/wiki/${encodeURIComponent((page.title || pageTitle).replace(/ /g, "_"))}`
+        };
+        imageCache.set(pageTitle, result);
+        return result;
+      }
+    }
+
+    function showQuestionImage(wiki, messier) {
+      imageWrap.innerHTML = "";
+      const image = document.createElement("img");
+      image.alt = wiki.title || `Messier ${messier}`;
+      image.loading = "lazy";
+      const candidates = [wiki.image, `images/messier/m${messier}.jpg`, `images/messier/m${messier}.png`, `images/messier/m${messier}.webp`]
+        .filter((value, position, list) => value && list.indexOf(value) === position);
+      let candidateIndex = 0;
+      image.addEventListener("error", () => {
+        candidateIndex += 1;
+        if (candidateIndex < candidates.length) image.src = candidates[candidateIndex];
+        else imageWrap.innerHTML = '<div class="image-placeholder">Local image unavailable.</div>';
+      });
+      imageWrap.appendChild(image);
+      image.src = candidates[0] || `images/messier/m${messier}.jpg`;
+    }
+
+    function updateStats() {
+      progressStat.textContent = `${Math.min(currentIndex + 1, questions.length)} / ${questions.length}`;
+      scoreStat.textContent = score;
+      streakStat.textContent = streak;
+      mistakeStat.textContent = mistakes.size;
+      objectCountLabel.textContent = `${questions.length} objects in “${selectedCategory}”`;
+    }
+
+    function setResult(type, title, text) {
+      resultBox.className = "result";
+      if (type === "good") resultBox.classList.add("good");
+      if (type === "bad") resultBox.classList.add("bad");
+      resultBox.innerHTML = `
+        <div class="result-title">${title}</div>
+        <div>${text}</div>
+      `;
+    }
+
+    async function loadQuestion() {
+      if (currentIndex >= questions.length) {
+        finishSession();
+        return;
+      }
+
+      currentAnswered = false;
+      const current = questions[currentIndex];
+      updateStats();
+      questionTitle.textContent = `Object ${currentIndex + 1} of ${questions.length}`;
+      modeLabel.textContent = mode === "all" ? "Mode: All objects" : "Mode: Replay mistakes";
+      messierInput.value = "";
+      typeInput.value = "";
+      messierInput.focus();
+      setResult("", "New object", "Type the Messier number, choose the object type, then press “Check answer”.");
+      imageWrap.innerHTML = `<div class="image-placeholder">Loading image...</div>`;
+
+      try {
+        const wiki = await fetchWikipediaData(current.page);
+        wikiLink.href = wiki.url;
+
+        showQuestionImage(wiki, current.messier);
+      } catch (error) {
+        wikiLink.href = `https://en.wikipedia.org/wiki/Messier_${current.messier}`;
+        showQuestionImage({}, current.messier);
+      }
+    }
+
+    async function checkAnswer() {
+      if (currentAnswered) return;
+
+      const current = questions[currentIndex];
+      const numGuess = normalizeMessier(messierInput.value);
+      const typeGuess = typeInput.value;
+
+      if (numGuess === null || !typeGuess) {
+        setResult("bad", "Incomplete answer", "You need to enter a Messier number and choose a type.");
+        return;
+      }
+
+      currentAnswered = true;
+      const correctNumber = numGuess === current.messier;
+      const correctType = typeGuess === current.type;
+
+      let wiki = null;
+      try {
+        wiki = await fetchWikipediaData(current.page);
+      } catch (error) {
+        wiki = null;
+      }
+
+      if (correctNumber && correctType) {
+        score += 1;
+        streak += 1;
+        recordAnswer(current, "correct");
+        setResult(
+          "good",
+          "Correct",
+          `That is <strong>M${current.messier}</strong> and it is a <strong>${current.type}</strong>.<br><br>${shortText(wiki ? wiki.extract : "")}`
+        );
+      } else {
+        streak = 0;
+        mistakes.add(current.messier);
+        recordAnswer(current, "incorrect");
+
+        const wrongParts = [];
+        if (!correctNumber) wrongParts.push(`the correct number is <strong>M${current.messier}</strong>`);
+        if (!correctType) wrongParts.push(`the correct type is <strong>${current.type}</strong>`);
+
+        setResult(
+          "bad",
+          "Not correct",
+          `${wrongParts.join(" and ")}.<br><br>${shortText(wiki ? wiki.extract : "")}`
+        );
+      }
+
+      updateStats();
+    }
+
+    async function showAnswer() {
+      if (currentAnswered || !questions[currentIndex]) return;
+      const current = questions[currentIndex];
+      currentAnswered = true;
+      streak = 0;
+      mistakes.add(current.messier);
+      recordAnswer(current, "revealed");
+
+      let wiki = null;
+      try {
+        wiki = await fetchWikipediaData(current.page);
+      } catch (error) {
+        wiki = null;
+      }
+
+      function extractConstellation(text) {
+        if (!text) return "Unknown";
+        const patterns = [
+          /in the constellation of ([A-Za-z \-]+)[\.,]/i,
+          /in the constellation ([A-Za-z \-]+)[\.,]/i,
+          /located in the constellation ([A-Za-z \-]+)[\.,]/i
+        ];
+        for (const p of patterns) {
+          const m = text.match(p);
+          if (m && m[1]) return m[1].trim();
+        }
+        return "Unknown";
+      }
+
+      const constellation = extractConstellation(wiki ? wiki.extract : "");
+      const details = shortText(wiki ? wiki.extract : "");
+
+      const html = `
+        <div class="answer-grid">
+          <div class="answer-label">Number</div><div class="answer-value">M${current.messier}</div>
+          <div class="answer-label">Constellation</div><div class="answer-value">${constellation}</div>
+          <div class="answer-label">What it is</div><div class="answer-value">${current.type}</div>
+          <div class="answer-label">Details</div><div class="answer-value">${details}</div>
+          <div class="sky-map-section">
+            <div class="sky-map-title">Position on the sky</div>
+            <div class="sky-map" id="skyMap"></div>
+            <div class="sky-map-note">M${current.messier} is centered. Blue lines show constellation figures; dashed orange lines show their boundaries.</div>
+          </div>
+        </div>
+      `;
+
+      setResult("bad", "Answer shown", html);
+      initializeSkyMap(current.messier);
+      updateStats();
+    }
+
+    function initializeSkyMap(messier) {
+      MessierSkyMap.render(document.getElementById("skyMap"), messier);
+    }
+
+    function nextQuestion() {
+      if (questions.length === 0) return;
+      currentIndex += 1;
+      loadQuestion();
+    }
+
+    function finishSession() {
+      progressStat.textContent = `${questions.length} / ${questions.length}`;
+      questionTitle.textContent = "Session complete";
+      imageWrap.innerHTML = `<div class="image-placeholder">You finished this round.</div>`;
+
+      const accuracy = questions.length ? Math.round((score / questions.length) * 100) : 0;
+      const extra = mistakes.size
+        ? `You can now press <strong>Replay mistakes</strong> to repeat the missed objects.`
+        : `Perfect round. No mistakes.`;
+
+      setResult(
+        "good",
+        "Done",
+        `Final score: <strong>${score}/${questions.length}</strong> (${accuracy}%).<br><br>${extra}`
+      );
+    }
+
+    function startSession(sessionMode) {
+      mode = sessionMode;
+
+      if (mode === "mistakes") {
+        const categoryNumbers = new Set(categories[selectedCategory] || []);
+        const onlyMistakes = baseObjects.filter(obj => categoryNumbers.has(obj.messier) && mistakes.has(obj.messier));
+        questions = shuffle(onlyMistakes);
+        if (questions.length === 0) {
+          setResult("bad", "No mistakes saved", "You do not have any saved mistakes to replay yet.");
+          return;
+        }
+      } else {
+        const categoryNumbers = new Set(categories[selectedCategory] || []);
+        questions = shuffle(baseObjects.filter(obj => categoryNumbers.has(obj.messier)));
+        mistakes = new Set();
+      }
+
+      currentIndex = 0;
+      score = 0;
+      streak = 0;
+      updateStats();
+      loadQuestion();
+    }
+
+    function buildCatalogueList() {
+      const included = new Set(categories[selectedCategory] || []);
+      const sorted = baseObjects.filter(obj => included.has(obj.messier)).sort((a, b) => a.messier - b.messier);
+      catalogueList.innerHTML = sorted
+        .map(obj => `<strong>M${obj.messier}</strong> — ${obj.type}`)
+        .join(" · ") || `<span class="muted">This category is empty. Select objects above to start training.</span>`;
+    }
+
+    document.getElementById("checkBtn").addEventListener("click", checkAnswer);
+    document.getElementById("nextBtn").addEventListener("click", nextQuestion);
+    document.getElementById("showBtn").addEventListener("click", showAnswer);
+    document.getElementById("restartBtn").addEventListener("click", () => startSession("all"));
+    document.getElementById("mistakesBtn").addEventListener("click", () => startSession("mistakes"));
+
+    messierInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        checkAnswer();
+      }
+    });
+
+    typeInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        checkAnswer();
+      }
+    });
+
+    renderCategorySelect();
+    renderObjectPicker();
+    buildCatalogueList();
+    startSession("all");
+  </script>
+</body>
+</html>

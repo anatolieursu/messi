@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messier Trainer — Statistics</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #0b0d12; color: #eef2ff; }
+    .app { max-width: 1100px; margin: 0 auto; padding: 24px 20px 48px; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+    h1 { margin: 0 0 5px; font-size: 28px; }
+    .muted { color: #99a5be; font-size: 14px; }
+    .button { display: inline-block; background: #1a2232; color: #eef2ff; border: 1px solid #2a3550; border-radius: 10px; padding: 10px 14px; text-decoration: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .danger { background: #2b1720; color: #ffd9e3; border-color: #523042; }
+    .actions { display: flex; gap: 8px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat, .panel { background: #11151f; border: 1px solid #20273a; border-radius: 14px; }
+    .stat { padding: 17px; }
+    .stat-label { color: #92a0ba; font-size: 12px; margin-bottom: 7px; }
+    .stat-value { font-size: 27px; font-weight: 700; }
+    .panel { padding: 18px; margin-top: 16px; overflow-x: auto; }
+    h2 { margin: 0 0 14px; font-size: 19px; }
+    table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid #20273a; font-size: 14px; }
+    th { color: #92a0ba; font-size: 12px; }
+    tr:last-child td { border-bottom: 0; }
+    .good { color: #72dfa8; }
+    .bad { color: #ff9aae; }
+    .bar { height: 7px; width: 120px; border-radius: 10px; background: #252e43; overflow: hidden; }
+    .bar > span { display: block; height: 100%; background: #4b74ff; }
+    .empty { padding: 30px 10px; text-align: center; color: #99a5be; }
+    @media (max-width: 700px) { .summary { grid-template-columns: 1fr 1fr; } h1 { font-size: 24px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div><h1>Statistics</h1><div class="muted" id="lastActivity">Your Messier training history</div></div>
+      <div class="actions"><a class="button" href="index.html">Back to trainer</a><a class="button" href="flashcards.html">Flashcards</a><button class="button danger" id="resetBtn">Reset statistics</button></div>
+    </header>
+
+    <section class="summary">
+      <div class="stat"><div class="stat-label">TOTAL ANSWERS</div><div class="stat-value" id="totalAnswers">0</div></div>
+      <div class="stat"><div class="stat-label">CORRECT</div><div class="stat-value good" id="correctAnswers">0</div></div>
+      <div class="stat"><div class="stat-label">ACCURACY</div><div class="stat-value" id="accuracy">0%</div></div>
+      <div class="stat"><div class="stat-label">ANSWERS SHOWN</div><div class="stat-value" id="revealedAnswers">0</div></div>
+      <div class="stat"><div class="stat-label">TRAINING TIME</div><div class="stat-value" id="trainingTime">0s</div></div>
+    </section>
+
+    <section class="panel"><h2>By category</h2><div id="categoryStats"></div></section>
+    <section class="panel"><h2>Messier object performance</h2><div id="objectStats"></div></section>
+  </main>
+
+  <script src="user-profile.js"></script>
+  <script>
+    const CURRENT_USERNAME = MessierUser.getCurrent();
+    MessierUser.mount(CURRENT_USERNAME);
+    const STATS_STORAGE_KEY = MessierUser.storageKey("messier-trainer-statistics-v1", CURRENT_USERNAME);
+    const emptyBucket = () => ({ answered: 0, correct: 0, incorrect: 0, revealed: 0 });
+    const percentage = bucket => bucket.answered ? Math.round((bucket.correct / bucket.answered) * 100) : 0;
+
+    function formatDuration(seconds) {
+      const total = Math.max(0, Math.floor(seconds || 0));
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const secs = total % 60;
+      if (hours) return `${hours}h ${minutes}m ${secs}s`;
+      if (minutes) return `${minutes}m ${secs}s`;
+      return `${secs}s`;
+    }
+
+    function loadStats() {
+      try { return JSON.parse(localStorage.getItem(STATS_STORAGE_KEY)) || {}; }
+      catch (error) { return {}; }
+    }
+
+    function table(rows, firstHeading, showTime = false) {
+      if (!rows.length) return '<div class="empty">No statistics yet. Complete some questions in the trainer first.</div>';
+      return `<table><thead><tr><th>${firstHeading}</th>${showTime ? "<th>Training time</th>" : ""}<th>Answered</th><th>Correct</th><th>Incorrect</th><th>Shown</th><th>Accuracy</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+    }
+
+    function row(label, bucket, trainingSeconds = null) {
+      const accuracy = percentage(bucket);
+      return `<tr><td><strong>${label}</strong></td>${trainingSeconds === null ? "" : `<td>${formatDuration(trainingSeconds)}</td>`}<td>${bucket.answered}</td><td class="good">${bucket.correct}</td><td class="bad">${bucket.incorrect}</td><td>${bucket.revealed}</td><td><div style="display:flex;align-items:center;gap:9px"><div class="bar"><span style="width:${accuracy}%"></span></div>${accuracy}%</div></td></tr>`;
+    }
+
+    function render() {
+      const stats = loadStats();
+      const total = stats.total || emptyBucket();
+      document.getElementById("totalAnswers").textContent = total.answered;
+      document.getElementById("correctAnswers").textContent = total.correct;
+      document.getElementById("accuracy").textContent = `${percentage(total)}%`;
+      document.getElementById("revealedAnswers").textContent = total.revealed;
+      document.getElementById("trainingTime").textContent = formatDuration(stats.trainingSeconds);
+      if (stats.lastActivity) document.getElementById("lastActivity").textContent = `Last activity: ${new Date(stats.lastActivity).toLocaleString()}`;
+
+      const categoryTimes = stats.categoryTrainingSeconds || {};
+      const categoryNames = [...new Set([...Object.keys(stats.categories || {}), ...Object.keys(categoryTimes)])];
+      categoryNames.sort((a, b) => (categoryTimes[b] || 0) - (categoryTimes[a] || 0));
+      document.getElementById("categoryStats").innerHTML = table(categoryNames.map(name => row(name, (stats.categories || {})[name] || emptyBucket(), categoryTimes[name] || 0)), "Category", true);
+
+      const objects = Object.entries(stats.objects || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
+      document.getElementById("objectStats").innerHTML = table(objects.map(([number, bucket]) => row(`M${number}`, bucket)), "Object");
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("Reset all saved statistics?")) return;
+      localStorage.removeItem(STATS_STORAGE_KEY);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
